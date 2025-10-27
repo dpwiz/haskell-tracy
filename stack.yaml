@@ -1,0 +1,8 @@
+snapshot: lts-22.44
+
+packages:
+- .
+
+# extra-deps:
+
+system-ghc: true
