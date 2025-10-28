@@ -6,12 +6,6 @@ author: "Author name here"
 maintainer: "example@example.com"
 copyright: "2025 Author name here"
 
-custom-setup:
-  dependencies:
-    - base
-    - Cabal
-    - process
-
 extra-source-files:
 - README.md
 - CHANGELOG.md
@@ -25,6 +19,12 @@ dependencies:
 default-extensions:
 - BlockArguments
 
+flags:
+  manual_lifetime:
+    description: Manually manage profiler lifetime
+    manual: true
+    default: true
+
 library:
   source-dirs: src
   c-sources: cbits/tracy_wrapper.c
@@ -35,12 +35,17 @@ library:
   extra-libraries:
   - TracyClient
   - stdc++
+  when:
+  - condition: flag(manual_lifetime)
+    cc-options:
+    - -DTRACY_MANUAL_LIFETIME
+    cpp-options:
+    - -DHS_MANUAL_LIFETIME
 
 tests:
   tracy-profiler-test:
     main: Spec.hs
     source-dirs: test
-    cpp-options: -DTRACY_ENABLE -DTRACY_MANUAL_LIFETIME
     ghc-options:
     - -threaded
     - -rtsopts

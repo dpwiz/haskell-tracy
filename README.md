@@ -1,5 +1,22 @@
 # tracy-profiler
 
+## Building
+
+Before building the project, you need to build the `TracyClient` library.
+This can be done by running the following commands:
+
+```sh
+cmake -B upstream/tracy/build -S upstream/tracy -DTRACY_ENABLE=ON -DTRACY_MANUAL_LIFETIME=ON -DTRACY_DELAYED_INIT=ON -DTRACY_ONLY_LOCALHOST=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+cmake --build upstream/tracy/build --config Release
+```
+
+If you are using a system-installed version of Tracy, you can disable the `manual_lifetime` flag in `package.yaml` and run the following command instead:
+
+```sh
+cmake -B upstream/tracy/build -S upstream/tracy -DTRACY_ENABLE=ON -DTRACY_ONLY_LOCALHOST=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+cmake --build upstream/tracy/build --config Release
+```
+
 ## API Coverage
 
 - [ ] `___tracy_set_thread_name`
@@ -37,7 +54,7 @@
 - [ ] `___tracy_emit_gpu_context_name_serial`
 - [ ] `___tracy_emit_gpu_calibration_serial`
 - [ ] `___tracy_emit_gpu_time_sync_serial`
-- [ ] `___tracy_connected`
+- [x] `___tracy_connected`
 - [ ] `___tracy_emit_memory_alloc`
 - [ ] `___tracy_emit_memory_alloc_callstack`
 - [ ] `___tracy_emit_memory_free`
