@@ -57,11 +57,9 @@ library
 
 test-suite tracy-profiler-test
   type: exitcode-stdio-1.0
-  main-is: Spec.hs
+  main-is: Main.hs
   other-modules:
-      Paths_tracy_profiler
-  autogen-modules:
-      Paths_tracy_profiler
+      Spec
   hs-source-dirs:
       test
   default-extensions:
@@ -69,6 +67,7 @@ test-suite tracy-profiler-test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , random
     , tasty
     , tasty-hunit
     , tracy-profiler
