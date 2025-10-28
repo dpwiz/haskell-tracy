@@ -17,6 +17,12 @@ TracyCZoneCtx* tracy_zone_begin_alloc(uint64_t srcloc) {
   return ctx;
 }
 
+TracyCZoneCtx* tracy_zone_begin(const struct ___tracy_source_location_data* srcloc) {
+    TracyCZoneCtx* ctx = (TracyCZoneCtx*)malloc(sizeof(TracyCZoneCtx));
+    *ctx = ___tracy_emit_zone_begin(srcloc, 1);
+    return ctx;
+}
+
 void tracy_zone_end(TracyCZoneCtx* ctx) {
   ___tracy_emit_zone_end(*ctx);
   free(ctx);
@@ -40,4 +46,24 @@ void tracy_emit_messageL(const char* txt) {
 
 int tracy_connected() {
   return ___tracy_connected();
+}
+
+void tracy_set_thread_name(const char* name) {
+  ___tracy_set_thread_name(name);
+}
+
+void tracy_frame_mark() {
+  ___tracy_emit_frame_mark(NULL);
+}
+
+void tracy_memory_alloc(const void* ptr, size_t size) {
+  ___tracy_emit_memory_alloc(ptr, size, 0);
+}
+
+void tracy_memory_free(const void* ptr) {
+  ___tracy_emit_memory_free(ptr, 0);
+}
+
+void tracy_emit_plot(const char* name, double val) {
+  ___tracy_emit_plot(name, val);
 }
