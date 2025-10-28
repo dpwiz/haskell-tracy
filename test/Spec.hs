@@ -4,8 +4,12 @@ import System.Tracy.Bindings
 
 main :: IO ()
 main = do
+  startupProfiler
   srcLoc <- allocSrcLoc 0 "test/Spec.hs" "main" 0xFFFFFFFF
   print srcLoc
-  -- TODO: start zone
-  -- TODO: emit message
-  -- TODO: end zone
+  withZone srcLoc \ctx -> do
+    message "hello from Haskell!"
+    zoneText ctx "some text"
+    zoneName ctx "a zone"
+    messageL "a literal"
+  shutdownProfiler
