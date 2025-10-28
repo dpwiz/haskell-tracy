@@ -16,15 +16,19 @@ module System.Tracy.Bindings (
   memoryAlloc,
   memoryFree,
   plotData,
+  waitConnected,
   TracyCZoneCtx(..),
 ) where
 
+import Control.Concurrent (threadDelay)
 import Control.Exception (bracket)
+import Data.Maybe (fromMaybe)
 import Data.Word
 import Foreign.C
 import Foreign.Marshal.Alloc
 import Foreign.Ptr
 import Foreign.Storable
+import System.Timeout (timeout)
 
 #define TRACY_ENABLE
 #include <tracy/TracyC.h>
@@ -168,3 +172,14 @@ memoryFree ptr = c_memory_free (castPtr ptr)
 plotData :: String -> Double -> IO ()
 plotData name val = withCString name \namePtr ->
   c_emit_plot namePtr val
+
+waitConnected :: Int -> Maybe Int -> IO Bool
+waitConnected interval mtimeout = fromMaybe False <$> case mtimeout of
+    Nothing -> fmap Just go
+    Just t -> timeout t go
+  where
+    go = do
+      conn <- isConnected
+      if conn
+        then pure True
+        else threadDelay interval >> go

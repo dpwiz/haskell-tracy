@@ -1,29 +1,29 @@
 module Main where
 
-import System.Tracy.Bindings
+import qualified System.Tracy.Bindings as Tracy
 import Foreign.Marshal.Alloc
 import Control.Exception
 
 main :: IO ()
-main = withProfiler do
-  setThreadName "Haskell main"
-  connected <- isConnected
+main = Tracy.withProfiler do
+  Tracy.setThreadName "Haskell main"
+  connected <- Tracy.waitConnected 200000 (Just 5000000)
   print connected
-  srcLoc <- allocSrcLoc 0 "test/Spec.hs" "main" 0xFFFFFFFF
+  srcLoc <- Tracy.allocSrcLoc 0 "test/Spec.hs" "main" 0xFFFFFFFF
   print srcLoc
-  withZone srcLoc \ctx -> do
-    message "hello from Haskell!"
-    zoneText ctx "some text"
-    zoneName ctx "a zone"
-    messageL "a literal"
+  Tracy.withZone srcLoc \ctx -> do
+    Tracy.message "hello from Haskell!"
+    Tracy.zoneText ctx "some text"
+    Tracy.zoneName ctx "a zone"
+    Tracy.messageL "a literal"
 
-  withZoneSRCLOC 0 "test/Spec.hs" "main" "my zone" 0xFF00FF \_ -> do
+  Tracy.withZoneSRCLOC 0 "test/Spec.hs" "main" "my zone" 0xFF00FF \_ -> do
     pure ()
 
-  frameMark
+  Tracy.frameMark
 
   bracket (mallocBytes 1024) free \ptr -> do
-    memoryAlloc ptr 1024
-    memoryFree ptr
+    Tracy.memoryAlloc ptr 1024
+    Tracy.memoryFree ptr
 
-  plotData "my plot" 3.14
+  Tracy.plotData "my plot" 3.14
