@@ -1,6 +1,7 @@
 #include <tracy/TracyC.h>
 #include <stdlib.h>
 
+#ifdef TRACY_MANUAL_LIFETIME
 void tracy_startup_profiler() {
   ___tracy_startup_profiler();
 }
@@ -8,6 +9,7 @@ void tracy_startup_profiler() {
 void tracy_shutdown_profiler() {
   ___tracy_shutdown_profiler();
 }
+#endif
 
 TracyCZoneCtx* tracy_zone_begin_alloc(uint64_t srcloc) {
   TracyCZoneCtx* ctx = (TracyCZoneCtx*)malloc(sizeof(TracyCZoneCtx));
@@ -34,4 +36,8 @@ void tracy_emit_zone_name(TracyCZoneCtx* ctx, const char* txt, size_t size) {
 
 void tracy_emit_messageL(const char* txt) {
   ___tracy_emit_messageL(txt, 0);
+}
+
+int tracy_connected() {
+  return ___tracy_connected();
 }

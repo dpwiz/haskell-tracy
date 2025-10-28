@@ -1,14 +1,15 @@
 {-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE CPP #-}
 
 module System.Tracy.Bindings (
-  startupProfiler,
-  shutdownProfiler,
+  withProfiler,
   allocSrcLoc,
   withZone,
   message,
   messageL,
   zoneText,
   zoneName,
+  isConnected,
   TracyCZoneCtx(..),
 ) where
 
@@ -20,8 +21,17 @@ import Foreign.Ptr
 #define TRACY_ENABLE
 #include <tracy/TracyC.h>
 
+#ifdef HS_MANUAL_LIFETIME
 foreign import ccall unsafe "tracy_wrapper.c tracy_startup_profiler" startupProfiler :: IO ()
 foreign import ccall unsafe "tracy_wrapper.c tracy_shutdown_profiler" shutdownProfiler :: IO ()
+#endif
+
+withProfiler :: IO a -> IO a
+#ifdef HS_MANUAL_LIFETIME
+withProfiler = bracket startupProfiler (const shutdownProfiler) . const
+#else
+withProfiler = id
+#endif
 
 foreign import ccall unsafe "___tracy_alloc_srcloc" c_alloc_srcloc
   :: Word32
@@ -60,6 +70,11 @@ foreign import ccall "tracy_wrapper.c tracy_emit_zone_text" c_tracy_emit_zone_te
     :: Ptr TracyCZoneCtx -> CString -> CSize -> IO ()
 foreign import ccall "tracy_wrapper.c tracy_emit_zone_name" c_tracy_emit_zone_name
     :: Ptr TracyCZoneCtx -> CString -> CSize -> IO ()
+foreign import ccall "tracy_wrapper.c tracy_connected" c_tracy_connected
+    :: IO CInt
+
+isConnected :: IO Bool
+isConnected = (/= 0) <$> c_tracy_connected
 
 zoneName :: TracyCZoneCtx -> String -> IO ()
 zoneName (TracyCZoneCtx ctx) s = withCStringLen s \(ptr, len) ->

@@ -14,7 +14,7 @@ maintainer:     example@example.com
 copyright:      2025 Author name here
 license:        BSD-3-Clause
 license-file:   LICENSE
-build-type:     Custom
+build-type:     Simple
 extra-source-files:
     README.md
     CHANGELOG.md
@@ -23,11 +23,10 @@ source-repository head
   type: git
   location: https://github.com/githubuser/tracy-profiler
 
-custom-setup
-  setup-depends:
-      Cabal
-    , base
-    , process
+flag manual_lifetime
+  description: Manually manage profiler lifetime
+  manual: True
+  default: True
 
 library
   exposed-modules:
@@ -52,6 +51,9 @@ library
   build-depends:
       base >=4.7 && <5
   default-language: Haskell2010
+  if flag(manual_lifetime)
+    cpp-options: -DHS_MANUAL_LIFETIME
+    cc-options: -DTRACY_MANUAL_LIFETIME
 
 test-suite tracy-profiler-test
   type: exitcode-stdio-1.0
@@ -65,7 +67,6 @@ test-suite tracy-profiler-test
   default-extensions:
       BlockArguments
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
-  cpp-options: -DTRACY_ENABLE -DTRACY_MANUAL_LIFETIME
   build-depends:
       base >=4.7 && <5
     , tasty
