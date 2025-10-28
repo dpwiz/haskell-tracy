@@ -31,15 +31,14 @@ cmake --build upstream/tracy/build --config Release
 - [x] `___tracy_connected`
 - [x] `___tracy_emit_message`
 - [x] `___tracy_emit_messageL`
+- [x] `___tracy_set_thread_name`
+- [x] `___tracy_emit_zone_begin`
+- [x] `___tracy_emit_frame_mark`
+- [x] `___tracy_emit_memory_alloc`
+- [x] `___tracy_emit_memory_free`
+- [x] `___tracy_emit_plot`
 
 ### High Priority
-
-- [ ] `___tracy_set_thread_name`
-- [ ] `___tracy_emit_zone_begin`
-- [ ] `___tracy_emit_frame_mark`
-- [ ] `___tracy_emit_memory_alloc`
-- [ ] `___tracy_emit_memory_free`
-- [ ] `___tracy_emit_plot`
 
 ### Medium Priority
 
