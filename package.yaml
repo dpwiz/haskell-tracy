@@ -6,6 +6,12 @@ author: "Author name here"
 maintainer: "example@example.com"
 copyright: "2025 Author name here"
 
+custom-setup:
+  dependencies:
+    - base
+    - Cabal
+    - process
+
 extra-source-files:
 - README.md
 - CHANGELOG.md
@@ -16,10 +22,19 @@ synopsis: Haskell bindings to libracy
 dependencies:
 - base >= 4.7 && < 5
 
+default-extensions:
+- BlockArguments
+
 library:
   source-dirs: src
+  c-sources: cbits/tracy_wrapper.c
+  cc-options:
+  - -DTRACY_ENABLE
+  include-dirs:
+  - upstream/tracy/public
   extra-libraries:
   - TracyClient
+  - stdc++
 
 tests:
   tracy-profiler-test:

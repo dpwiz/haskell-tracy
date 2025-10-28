@@ -1,0 +1,4 @@
+#!/bin/sh
+set -e
+cmake -B upstream/tracy/build -S upstream/tracy -DTRACY_ENABLE=ON -DTRACY_MANUAL_LIFETIME=ON -DTRACY_DELAYED_INIT=ON -DTRACY_ONLY_LOCALHOST=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+cmake --build upstream/tracy/build --config Release

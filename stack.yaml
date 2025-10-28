@@ -3,6 +3,9 @@ snapshot: lts-22.44
 packages:
 - .
 
+extra-lib-dirs:
+- upstream/tracy/build
+
 # extra-deps:
 
 system-ghc: true
