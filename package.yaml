@@ -44,9 +44,7 @@ library:
 
 tests:
   tracy-profiler-test:
-    main: Main.hs
-    other-modules:
-    - Spec
+    main: Spec.hs
     source-dirs: test
     ghc-options:
     - -threaded

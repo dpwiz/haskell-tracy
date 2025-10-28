@@ -57,9 +57,11 @@ library
 
 test-suite tracy-profiler-test
   type: exitcode-stdio-1.0
-  main-is: Main.hs
+  main-is: Spec.hs
   other-modules:
-      Spec
+      Paths_tracy_profiler
+  autogen-modules:
+      Paths_tracy_profiler
   hs-source-dirs:
       test
   default-extensions:

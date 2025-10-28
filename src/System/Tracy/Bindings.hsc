@@ -23,12 +23,14 @@ module System.Tracy.Bindings (
 import Control.Concurrent (threadDelay)
 import Control.Exception (bracket)
 import Data.Maybe (fromMaybe)
+import Foreign.Marshal.Utils (fromBool)
 import Data.Word
 import Foreign.C
 import Foreign.Marshal.Alloc
 import Foreign.Ptr
 import Foreign.Storable
 import System.Timeout (timeout)
+import Foreign (with)
 
 #define TRACY_ENABLE
 #include <tracy/TracyC.h>
@@ -95,15 +97,15 @@ allocSrcLoc line source function color =
 
 newtype TracyCZoneCtx = TracyCZoneCtx (Ptr TracyCZoneCtx)
 foreign import ccall "tracy_wrapper.c tracy_zone_begin_alloc" c_tracy_zone_begin_alloc
-    :: Word64 -> IO (Ptr TracyCZoneCtx)
+    :: Word64 -> CInt -> IO (Ptr TracyCZoneCtx)
 foreign import ccall "tracy_wrapper.c tracy_zone_begin" c_tracy_zone_begin
-    :: Ptr SourceLocationData -> IO (Ptr TracyCZoneCtx)
+    :: Ptr SourceLocationData -> CInt -> IO (Ptr TracyCZoneCtx)
 foreign import ccall "tracy_wrapper.c tracy_zone_end" c_tracy_zone_end
     :: Ptr TracyCZoneCtx -> IO ()
 foreign import ccall "tracy_wrapper.c tracy_emit_message" c_tracy_emit_message
-    :: CString -> CSize -> IO ()
+    :: CString -> CSize -> CInt -> IO ()
 foreign import ccall "tracy_wrapper.c tracy_emit_messageL" c_tracy_emit_messageL
-    :: CString -> IO ()
+    :: CString -> CInt -> IO ()
 foreign import ccall "tracy_wrapper.c tracy_emit_zone_text" c_tracy_emit_zone_text
     :: Ptr TracyCZoneCtx -> CString -> CSize -> IO ()
 foreign import ccall "tracy_wrapper.c tracy_emit_zone_name" c_tracy_emit_zone_name
@@ -113,11 +115,11 @@ foreign import ccall "tracy_wrapper.c tracy_connected" c_tracy_connected
 foreign import ccall "tracy_wrapper.c tracy_set_thread_name" c_tracy_set_thread_name
     :: CString -> IO ()
 foreign import ccall "tracy_wrapper.c tracy_frame_mark" c_frame_mark
-    :: IO ()
+    :: CString -> IO ()
 foreign import ccall "tracy_wrapper.c tracy_memory_alloc" c_memory_alloc
-    :: Ptr () -> CSize -> IO ()
+    :: Ptr () -> CSize -> CInt -> IO ()
 foreign import ccall "tracy_wrapper.c tracy_memory_free" c_memory_free
-    :: Ptr () -> IO ()
+    :: Ptr () -> CInt -> IO ()
 foreign import ccall "tracy_wrapper.c tracy_emit_plot" c_emit_plot
     :: CString -> Double -> IO ()
 
@@ -132,42 +134,42 @@ zoneText :: TracyCZoneCtx -> String -> IO ()
 zoneText (TracyCZoneCtx ctx) s = withCStringLen s \(ptr, len) ->
   c_tracy_emit_zone_text ctx ptr (fromIntegral len)
 
-withZone :: Word64 -> (TracyCZoneCtx -> IO a) -> IO a
-withZone srcloc = bracket
-  (TracyCZoneCtx <$> c_tracy_zone_begin_alloc srcloc)
+withZone :: Word64 -> Bool -> (TracyCZoneCtx -> IO a) -> IO a
+withZone srcloc active = bracket
+  (TracyCZoneCtx <$> c_tracy_zone_begin_alloc srcloc (fromBool active))
   (\(TracyCZoneCtx ctx) -> c_tracy_zone_end ctx)
 
-withZoneSRCLOC :: Int -> String -> String -> String -> Word32 -> (TracyCZoneCtx -> IO a) -> IO a
-withZoneSRCLOC line file function name color f =
+withZoneSRCLOC :: Int -> String -> String -> String -> Word32 -> Bool -> (TracyCZoneCtx -> IO a) -> IO a
+withZoneSRCLOC line file function name color active f =
   withCString name \namePtr ->
     withCString function \functionPtr ->
       withCString file \filePtr ->
-        alloca \slPtr -> do
-          let sl = SourceLocationData namePtr functionPtr filePtr (fromIntegral line) color
-          poke slPtr sl
-          bracket
-            (TracyCZoneCtx <$> c_tracy_zone_begin slPtr)
-            (\(TracyCZoneCtx ctx) -> c_tracy_zone_end ctx)
-            f
+        let sl = SourceLocationData namePtr functionPtr filePtr (fromIntegral line) color
+        in with sl \slPtr ->
+            bracket
+              (TracyCZoneCtx <$> c_tracy_zone_begin slPtr (fromBool active))
+              (\(TracyCZoneCtx ctx) -> c_tracy_zone_end ctx)
+              f
 
-message :: String -> IO ()
-message s = withCStringLen s \(ptr, len) ->
-  c_tracy_emit_message ptr (fromIntegral len)
+message :: String -> Int -> IO ()
+message s depth = withCStringLen s \(ptr, len) ->
+  c_tracy_emit_message ptr (fromIntegral len) (fromIntegral depth)
 
-messageL :: String -> IO ()
-messageL s = withCString s c_tracy_emit_messageL
+messageL :: String -> Int -> IO ()
+messageL s depth = withCString s \ptr -> c_tracy_emit_messageL ptr (fromIntegral depth)
 
 setThreadName :: String -> IO ()
 setThreadName s = withCString s c_tracy_set_thread_name
 
-frameMark :: IO ()
-frameMark = c_frame_mark
+frameMark :: Maybe String -> IO ()
+frameMark Nothing = c_frame_mark nullPtr
+frameMark (Just s) = withCString s c_frame_mark
 
-memoryAlloc :: Ptr a -> Int -> IO ()
-memoryAlloc ptr size = c_memory_alloc (castPtr ptr) (fromIntegral size)
+memoryAlloc :: Ptr a -> Int -> Bool -> IO ()
+memoryAlloc ptr size secure = c_memory_alloc (castPtr ptr) (fromIntegral size) (fromBool secure)
 
-memoryFree :: Ptr a -> IO ()
-memoryFree ptr = c_memory_free (castPtr ptr)
+memoryFree :: Ptr a -> Bool -> IO ()
+memoryFree ptr secure = c_memory_free (castPtr ptr) (fromBool secure)
 
 plotData :: String -> Double -> IO ()
 plotData name val = withCString name \namePtr ->
