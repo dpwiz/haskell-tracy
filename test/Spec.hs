@@ -33,8 +33,9 @@ update frameCounter piState = Tracy.withZoneSRCLOC __LINE__ __FILE__ "update" "u
   i <- atomicModifyIORef' frameCounter (\i -> (i+1, i))
   when (i `mod` 15 == 0) $
     Tracy.withZoneSRCLOC __LINE__ __FILE__ "factorial" "factorial" 0xFF00FF True $ \_ -> do
-      let !_ = factorial 50000
-      pure ()
+      let n = toInteger (100 * i)
+      let f = show $ factorial n
+      Tracy.message (take 0xFFFe $ "factorial of " <> show n <> " is " <> show f) 0
 
   estimatePi piState
   physics
