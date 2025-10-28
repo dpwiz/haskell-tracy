@@ -138,17 +138,18 @@ withZone srcloc = bracket
   (\(TracyCZoneCtx ctx) -> c_tracy_zone_end ctx)
 
 withZoneSRCLOC :: Int -> String -> String -> String -> Word32 -> (TracyCZoneCtx -> IO a) -> IO a
-withZoneSRCLOC line f function name color = bracket
-  (
+withZoneSRCLOC line file function name color f =
     withCString name \namePtr ->
       withCString function \functionPtr ->
-        withCString f \filePtr -> do
-          let sl = SourceLocationData namePtr functionPtr filePtr (fromIntegral line) color
-          alloca \slPtr -> do
-            poke slPtr sl
-            TracyCZoneCtx <$> c_tracy_zone_begin slPtr
-  )
-  (\(TracyCZoneCtx ctx) -> c_tracy_zone_end ctx)
+        withCString file \filePtr ->
+          bracket
+            do
+              let sl = SourceLocationData namePtr functionPtr filePtr (fromIntegral line) color
+              alloca \slPtr -> do
+                poke slPtr sl
+                TracyCZoneCtx <$> c_tracy_zone_begin slPtr
+            (\(TracyCZoneCtx ctx) -> c_tracy_zone_end ctx)
+            f
 
 message :: String -> IO ()
 message s = withCStringLen s \(ptr, len) ->
